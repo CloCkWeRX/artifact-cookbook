@@ -181,6 +181,16 @@ class Chef
         location_of_type(location, %w(http https))
       end
 
+      # Returns true when the artifact is believed to be from an
+      # sftp or ftp source.
+      #
+      # @param  location [String] the artifact_location
+      # 
+      # @return [Boolean] true when the location matches sftp or ftp.
+      def from_sftp?(location)
+        location_of_type(location, %w(sftp ftp))
+      end
+
       # Returns true when the location URI scheme matches the type
       #
       # @param  location [String] the location URI to check
