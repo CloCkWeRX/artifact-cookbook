@@ -626,7 +626,7 @@ private
   def retrieve_from_sftp
     uri = URI(new_resource.artifact_location)
     execute "copy file using sftp" do
-      command "sftp #{uri.user}@#{uri.host}:/home/#{uri.user}/#{uri.path}  #{artifact_cache_version_path}/"
+      command "sftp #{uri.user}@#{uri.host}:#{uri.path}  #{artifact_cache_version_path}/"
     end
   end
 
