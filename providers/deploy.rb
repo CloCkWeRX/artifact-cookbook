@@ -21,6 +21,7 @@
 #
 require 'digest'
 require 'pathname'
+require 'uri'
 require 'yaml'
 
 attr_reader :release_path
@@ -546,12 +547,12 @@ private
       if Chef::Artifact.from_http?(new_resource.artifact_location)
         Chef::Log.info "artifact_deploy[retrieve_artifact!] Retrieving artifact from #{artifact_location}"
         retrieve_from_http
+      elsif from_sftp?(new_resource.artifact_location)
+        Chef::Log.info "artifact_deploy[retrieve_artifact!] Retrieving artifact from SFTP using #{artifact_location}"
+        retrieve_from_sftp
       elsif Chef::Artifact.from_nexus?(new_resource.artifact_location)
         Chef::Log.info "artifact_deploy[retrieve_artifact!] Retrieving artifact from Nexus using #{artifact_location}"
         retrieve_from_nexus
-      elsif Chef::Artifact.from_s3?(new_resource.artifact_location)
-        Chef::Log.info "artifact_deploy[retrieve_artifact!] Retrieving artifact from S3 using #{artifact_location}"
-        retrieve_from_s3
       elsif ::File.exist?(new_resource.artifact_location)
         Chef::Log.info "artifact_deploy[retrieve_artifact!] Retrieving artifact local path #{artifact_location}"
         retrieve_from_local
@@ -559,6 +560,10 @@ private
         Chef::Application.fatal! "artifact_deploy[retrieve_artifact!] Cannot retrieve artifact #{artifact_location}! Please make sure the artifact exists in the specified location."
       end
     end
+  end
+
+  def from_sftp?(location)
+    location =~ URI::regexp(['sftp','ftp'])
   end
 
   # Defines a resource call for downloading the remote artifact.
@@ -618,6 +623,15 @@ private
     end
   end
 
+
+  def retrieve_from_sftp
+    uri = URI(new_resource.artifact_location)
+    execute "copy file using sftp" do
+      command "sftp #{uri.user}@#{uri.host}:/home/#{uri.user}/#{uri.path}  #{artifact_cache_version_path}/"
+    end
+  end
+
+ 
   # Generates a manifest for all the files underneath the given files_path. SHA1 digests will be
   # generated for all files under the given files_path with the exception of directories and the
   # manifest.yaml file itself.
